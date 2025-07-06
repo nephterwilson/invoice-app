@@ -163,6 +163,12 @@
     doc.setFontSize(12);
     doc.text(`Total (MK): ${document.getElementById('grandTotal').innerText}`, 200, finalY, { align: "right" });
 
+    // Footer message at the bottom of the page
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(10);
+        doc.text("Thank you for your business!", 105, 275, { align: "center" });
+
+
     doc.save("invoice.pdf");
   }
 
