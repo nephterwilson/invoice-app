@@ -19,7 +19,7 @@
         <p id="invoiceDate" class="text-sm text-gray-500"></p>
       </div>
       <div class="text-right">
-        <img src="./mg/wtech.png" alt="Logo" class="w-20 h-20 mb-2 ml-auto" />
+        <img src="./wtech.png" alt="Logo" class="w-20 h-20 mb-2 ml-auto" />
         <input id="shopName" placeholder="Shop Name" class="font-semibold text-lg outline-none border-b border-gray-400" />
         <br />
         <input id="shopContact" placeholder="Shop Contact" class="text-sm outline-none border-b border-gray-300" />
@@ -53,92 +53,132 @@
 
     <!-- Generate PDF Button -->
     <div class="text-center mt-8">
-      <button onclick="generatePDF()" class="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700">Generate PDF</button>
+      <button type="button" onclick="generatePDF()" class="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700">Generate PDF</button>
     </div>
   </div>
 
   <script>
-    let itemIndex = 0;
+  let itemIndex = 0;
 
-    function addItem() {
-      const container = document.getElementById("itemsContainer");
+  function addItem() {
+    const container = document.getElementById("itemsContainer");
 
-      const row = document.createElement("div");
-      row.className = "grid grid-cols-4 gap-4 py-2";
-      row.innerHTML = `
-        <input type="text" placeholder="Item Name" class="border p-2 rounded" oninput="calculateTotal()">
-        <input type="number" placeholder="Qty" class="border p-2 rounded qty" oninput="calculateTotal()">
-        <input type="number" placeholder="Price" class="border p-2 rounded price" oninput="calculateTotal()">
-        <div class="total py-2">0.00</div>
-      `;
+    const row = document.createElement("div");
+    row.className = "grid grid-cols-4 gap-4 py-2";
+    row.innerHTML = `
+      <input type="text" placeholder="Item Name" class="border p-2 rounded" oninput="calculateTotal()">
+      <input type="number" placeholder="Qty" class="border p-2 rounded qty" oninput="calculateTotal()">
+      <input type="number" placeholder="Price" class="border p-2 rounded price" oninput="calculateTotal()">
+      <div class="total py-2">0.00</div>
+    `;
 
-      container.appendChild(row);
+    container.appendChild(row);
+  }
+
+  function calculateTotal() {
+    const rows = document.querySelectorAll("#itemsContainer .grid");
+    let grandTotal = 0;
+
+    rows.forEach(row => {
+      const qty = parseFloat(row.querySelector(".qty").value) || 0;
+      const price = parseFloat(row.querySelector(".price").value) || 0;
+      const total = qty * price;
+      row.querySelector(".total").innerText = total.toFixed(2);
+      grandTotal += total;
+    });
+
+    document.getElementById("grandTotal").innerText = grandTotal.toFixed(2);
+  }
+
+  async function generatePDF() {
+    const jsPDF = window.jspdf.jsPDF;
+    const doc = new jsPDF();
+
+    // Add logo if available
+   const logoData = await loadImageAsBase64("wtech.png");
+    if (logoData) {
+      doc.addImage(logoData, 'PNG', 150, 10, 40, 25); // Adjust position and size as needed
     }
 
-    function calculateTotal() {
-      const rows = document.querySelectorAll("#itemsContainer .grid");
-      let grandTotal = 0;
+    // Header info
+    doc.setFontSize(16);
+    doc.text("Invoice", 10, 10);
 
-      rows.forEach(row => {
-        const qty = parseFloat(row.querySelector(".qty").value) || 0;
-        const price = parseFloat(row.querySelector(".price").value) || 0;
-        const total = qty * price;
-        row.querySelector(".total").innerText = total.toFixed(2);
-        grandTotal += total;
+    doc.setFontSize(10);
+    doc.text(`Invoice #: ${document.getElementById('invoiceId').innerText}`, 10, 16);
+
+    // Add dynamic date and time
+    const now = new Date();
+    const dateTimeString = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+    doc.text(`Date & Time: ${dateTimeString}`, 10, 22);
+
+    doc.text(`Shop: ${document.getElementById('shopName').value}`, 10, 28);
+    doc.text(`Contact: ${document.getElementById('shopContact').value}`, 10, 34);
+    doc.text(`Client: ${document.getElementById('clientName').value}`, 10, 40);
+    doc.text(`Contact: ${document.getElementById('clientContact').value}`, 10, 46);
+
+    // Draw table headers with borders
+    let y = 60;
+    doc.setFontSize(12);
+    doc.setDrawColor(0);
+    doc.setFillColor(230);
+
+    // Draw header background
+    doc.rect(10, y - 8, 180, 10, 'F');
+
+    doc.setTextColor(0);
+    doc.text("Item", 12, y);
+    doc.text("Qty", 75, y);
+    doc.text("Price (MK)", 110, y);
+    doc.text("Total (MK)", 155, y);
+
+    // Draw table rows with borders
+    const rows = document.querySelectorAll("#itemsContainer .grid");
+    y += 5;
+    rows.forEach(row => {
+      y += 10;
+      doc.rect(10, y - 8, 180, 10); // cell border width 180, height 10
+
+      doc.text(row.children[0].value || "-", 12, y);
+      doc.text(row.children[1].value || "0", 75, y);
+      doc.text(row.children[2].value || "0", 110, y);
+      doc.text(row.children[3].innerText || "0", 155, y);
+    });
+
+    y += 15;
+    doc.setFont(undefined, 'bold');
+    doc.text(`Total (MK): ${document.getElementById('grandTotal').innerText}`, 150, y);
+
+    doc.save("invoice.pdf");
+  }
+
+  // Helper function to load image as base64
+  async function loadImageAsBase64(url) {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      return await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
       });
-
-      document.getElementById("grandTotal").innerText = grandTotal.toFixed(2);
+    } catch (e) {
+      console.warn("Logo not found or failed to load.");
+      return null;
     }
+  }
 
-    function generatePDF() {
-      const jsPDF = window.jspdf.jsPDF;
-      const doc = new jsPDF();
+  function generateInvoiceNumber() {
+    const num = Math.floor(Math.random() * 90000) + 10000;
+    document.getElementById("invoiceId").innerText = num;
+  }
 
-      doc.setFontSize(16);
-      doc.text("Invoice", 10, 10);
-      doc.setFontSize(10);
-      doc.text(`Invoice #: ${document.getElementById('invoiceId').innerText}`, 10, 16);
-      doc.text(`Shop: ${document.getElementById('shopName').value}`, 10, 24);
-      doc.text(`Contact: ${document.getElementById('shopContact').value}`, 10, 30);
-      doc.text(`Client: ${document.getElementById('clientName').value}`, 10, 38);
-      doc.text(`Contact: ${document.getElementById('clientContact').value}`, 10, 44);
+  window.onload = () => {
+    generateInvoiceNumber();
+    document.getElementById("invoiceDate").innerText = `Date: ${new Date().toLocaleDateString()}`;
+    addItem();
+  }
+</script>
 
-      let y = 60;
-      doc.setFontSize(12);
-      doc.text("Item", 10, y);
-      doc.text("Qty", 70, y);
-      doc.text("Price (MK)", 100, y);
-      doc.text("Total (MK)", 150, y);
-      y += 8;
-
-      const rows = document.querySelectorAll("#itemsContainer .grid");
-      rows.forEach(row => {
-        const item = row.children[0].value;
-        const qty = row.children[1].value;
-        const price = row.children[2].value;
-        const total = row.children[3].innerText;
-
-        doc.text(item, 10, y);
-        doc.text(qty, 70, y);
-        doc.text(price, 100, y);
-        doc.text(total, 150, y);
-        y += 8;
-      });
-
-      doc.text(`Total (MK): ${document.getElementById('grandTotal').innerText}`, 150, y + 10);
-      doc.save("invoice.pdf");
-    }
-
-    function generateInvoiceNumber() {
-      const num = Math.floor(Math.random() * 90000) + 10000;
-      document.getElementById("invoiceId").innerText = num;
-    }
-
-    window.onload = () => {
-      generateInvoiceNumber();
-      document.getElementById("invoiceDate").innerText = `Date: ${new Date().toLocaleDateString()}`;
-      addItem();
-    }
-  </script>
 </body>
 </html>
