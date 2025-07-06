@@ -1,204 +1,99 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simple Invoice Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wtec1 Invoice Studio</title>
+
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- Optional: favicon -->
+  <link rel="shortcut icon" href="./mg/wtech.png" type="image/png" />
 </head>
 
-<body class="bg-gray-100 p-4">
-  <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6" id="invoice">
-    <!-- Header -->
-    <div class="flex justify-between items-start mb-6">
+<body class="bg-gradient-to-r from-blue-50 to-indigo-50 min-h-screen flex flex-col">
+
+  <!-- HEADER -->
+  <header class="bg-gray-900 text-white px-6 py-4 w-full shadow-md">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
       <div>
-        <h2 class="text-2xl font-bold">Invoice</h2>
-        <p id="invoiceNumber" class="text-sm text-gray-500">Invoice #<span id="invoiceId"></span></p>
-        <p id="invoiceDate" class="text-sm text-gray-500"></p>
+        <h1 class="text-3xl font-extrabold tracking-wide">Wtec1 Invoice Studio</h1>
+        <p class="text-sm text-gray-300 mt-1">Powered by Wtec1 Technologies</p>
       </div>
-      <div class="text-right">
-        <img src="./wtech.png" alt="Logo" class="w-20 h-20 mb-2 ml-auto" />
-        <input id="shopName" placeholder="Shop Name" class="font-semibold text-lg outline-none border-b border-gray-400" />
-        <br />
-        <input id="shopContact" placeholder="Shop Contact" class="text-sm outline-none border-b border-gray-300" />
+      <div>
+        <img src="./mg/wtech.png" alt="Logo" class="w-16 h-16 rounded shadow-md" />
       </div>
     </div>
+  </header>
 
-    <!-- Client Info -->
-    <div class="grid grid-cols-2 gap-4 mb-6">
-      <input id="clientName" placeholder="Client Name" class="border border-gray-300 p-2 rounded w-full" />
-      <input id="clientContact" placeholder="Client Contact" class="border border-gray-300 p-2 rounded w-full" />
-    </div>
+  <!-- MAIN CONTENT -->
+  <main class="flex-grow max-w-5xl mx-auto p-8 bg-white rounded-3xl shadow-xl mt-12 mb-16 flex flex-col md:flex-row items-center gap-12">
+    
+    <!-- Text Content -->
+    <section class="max-w-xl text-center md:text-left">
+      <h2 class="text-4xl font-extrabold mb-6 text-gray-900 leading-tight">
+        Create Professional Invoices <br class="hidden md:block" /> Quickly & Effortlessly
+      </h2>
+      <p class="text-gray-700 mb-8 text-lg">
+        Streamline your billing process with Wtec1 Invoice Studio — an intuitive, powerful invoicing tool tailored for businesses like yours.
+      </p>
+      <a href="./invoice.html" 
+         class="inline-block bg-indigo-600 text-white px-10 py-4 rounded-full font-semibold shadow-lg hover:bg-indigo-700 transition duration-300">
+         Get Started Now
+      </a>
+    </section>
 
-    <!-- Table Header -->
-    <div class="grid grid-cols-4 gap-4 font-semibold border-b py-2">
-      <div>Item</div>
-      <div>Quantity</div>
-      <div>Price (MK)</div>
-      <div>Total (MK)</div>
-    </div>
+    <!-- Image / Illustration -->
+  <section class="max-w-md mx-auto">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 400 300"
+    class="rounded-xl shadow-lg mx-auto"
+    style="width: 100%; height: auto; max-width: 400px;"
+    fill="none"
+  >
+    <!-- Outer Invoice Border -->
+    <rect x="30" y="30" width="340" height="240" rx="15" ry="15" fill="#f0f4ff" stroke="#4f46e5" stroke-width="3" />
 
-    <!-- Items Container -->
-    <div id="itemsContainer"></div>
+    <!-- Top Separator -->
+    <line x1="50" y1="70" x2="350" y2="70" stroke="#4f46e5" stroke-width="2.5" />
 
-    <!-- Add Item Button -->
-    <button onclick="addItem()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Add Item</button>
+    <!-- Invoice Rows -->
+    <rect x="50" y="90" width="300" height="30" fill="#6366f1" rx="5" />
+    <rect x="50" y="130" width="300" height="30" fill="#818cf8" rx="5" />
+    <rect x="50" y="170" width="300" height="30" fill="#a5b4fc" rx="5" />
+    <rect x="50" y="210" width="300" height="30" fill="#c7d2fe" rx="5" />
 
-    <!-- Total -->
-    <div class="flex justify-end mt-6 text-xl font-bold">
-      Total (MK): <span id="grandTotal" class="ml-2">0.00</span>
-    </div>
+    <!-- Labels -->
+    <text x="60" y="110" font-family="Arial" font-size="14" font-weight="bold" fill="white">Item Name</text>
+    <text x="60" y="150" font-family="Arial" font-size="14" font-weight="bold" fill="#1e1b4b">Quantity</text>
+    <text x="60" y="190" font-family="Arial" font-size="14" font-weight="bold" fill="#1e1b4b">Price</text>
+    <text x="60" y="230" font-family="Arial" font-size="14" font-weight="bold" fill="#1e1b4b">Total</text>
 
-    <!-- Generate PDF Button -->
-    <div class="text-center mt-8">
-      <button type="button" onclick="generatePDF()" class="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700">Generate PDF</button>
-    </div>
-  </div>
+    <!-- PDF Download Icon -->
+    <circle cx="350" cy="250" r="15" fill="#4f46e5" />
+    <polyline points="342,244 350,258 358,244" stroke="white" stroke-width="2" fill="none" />
+  </svg>
+</section>
+
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-gray-100 text-center text-gray-500 text-sm py-6 border-t">
+    <p>&copy; <span id="year"></span> Excellence Shop. Shop. All rights reserved.</p>
+    <p>Developed by <strong>Wtec1 Technologies</strong> | WhatsApp: +265 995 591 835</p>
+  </footer>
 
   <script>
-  let itemIndex = 0;
-
-  function addItem() {
-    const container = document.getElementById("itemsContainer");
-
-    const row = document.createElement("div");
-    row.className = "grid grid-cols-5 gap-4 py-2 items-center"; // Made 5 columns for remove button
-    row.innerHTML = `
-      <input type="text" placeholder="Item Name" class="border p-2 rounded" oninput="calculateTotal()">
-      <input type="number" placeholder="Qty" class="border p-2 rounded qty" oninput="calculateTotal()">
-      <input type="number" placeholder="Price" class="border p-2 rounded price" oninput="calculateTotal()">
-      <div class="total py-2 text-center">0.00</div>
-      <button onclick="removeItem(this)" class="text-red-500 hover:text-red-700 font-bold text-lg">×</button>
-    `;
-
-    container.appendChild(row);
-  }
-
-  function removeItem(button) {
-    const row = button.parentElement;
-    row.remove();
-    calculateTotal();
-  }
-
-  function calculateTotal() {
-    const rows = document.querySelectorAll("#itemsContainer .grid");
-    let grandTotal = 0;
-
-    rows.forEach(row => {
-      const qty = parseFloat(row.querySelector(".qty").value) || 0;
-      const price = parseFloat(row.querySelector(".price").value) || 0;
-      const total = qty * price;
-      row.querySelector(".total").innerText = total.toFixed(2);
-      grandTotal += total;
-    });
-
-    document.getElementById("grandTotal").innerText = grandTotal.toFixed(2);
-  }
-
-  async function generatePDF() {
-    const jsPDF = window.jspdf.jsPDF;
-    const doc = new jsPDF();
-
-    // Add logo if available
-    const logoData = await loadImageAsBase64("wtech.png");
-    if (logoData) {
-      doc.addImage(logoData, 'PNG', 150, 10, 40, 25);
-    }
-
-    // Header info
-    doc.setFontSize(16);
-    doc.text("Invoice", 10, 10);
-
-    doc.setFontSize(10);
-    doc.text(`Invoice #: ${document.getElementById('invoiceId').innerText}`, 10, 16);
-
-    const now = new Date();
-    const dateTimeString = now.toLocaleDateString() + " " + now.toLocaleTimeString();
-    doc.text(`Date & Time: ${dateTimeString}`, 10, 22);
-    doc.text(`Shop: ${document.getElementById('shopName').value}`, 10, 28);
-    doc.text(`Contact: ${document.getElementById('shopContact').value}`, 10, 34);
-    doc.text(`Client: ${document.getElementById('clientName').value}`, 10, 40);
-    doc.text(`Contact: ${document.getElementById('clientContact').value}`, 10, 46);
-
-    // Table with autoTable
-    const yStart = 60;
-    const rows = document.querySelectorAll("#itemsContainer .grid");
-    const tableData = Array.from(rows).map(row => [
-      row.children[0].value || "-",
-      row.children[1].value || "0",
-      "MK " + (row.children[2].value || "0"),
-      "MK " + (row.children[3].innerText || "0")
-    ]);
-
-    doc.autoTable({
-      startY: yStart,
-      head: [["Item", "Qty", "Price (MK)", "Total (MK)"]],
-      body: tableData,
-      theme: 'grid',
-      headStyles: {
-        fillColor: [0, 0, 0],
-        textColor: 255,
-        halign: 'center',
-        fontStyle: 'bold',
-        fontSize: 11
-      },
-      bodyStyles: {
-        halign: 'center',
-        textColor: 20,
-        fontSize: 10
-      },
-      styles: {
-        lineColor: 30,
-        lineWidth: 0.4,
-        font: 'helvetica',
-        fontStyle: 'normal'
-      }
-    });
-
-    // Add total below table
-    const finalY = doc.lastAutoTable.finalY + 12;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text(`Total (MK): ${document.getElementById('grandTotal').innerText}`, 200, finalY, { align: "right" });
-
-    // Footer message at the bottom of the page
-        doc.setFont('helvetica', 'italic');
-        doc.setFontSize(10);
-        doc.text("Thank you for your business!", 105, 275, { align: "center" });
-
-
-    doc.save("invoice.pdf");
-  }
-
-  async function loadImageAsBase64(url) {
-    try {
-      const res = await fetch(url);
-      const blob = await res.blob();
-      return await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-      });
-    } catch (e) {
-      console.warn("Logo not found or failed to load.");
-      return null;
-    }
-  }
-
-  function generateInvoiceNumber() {
-    const num = Math.floor(Math.random() * 90000) + 10000;
-    document.getElementById("invoiceId").innerText = num;
-  }
-
-  window.onload = () => {
-    generateInvoiceNumber();
-    document.getElementById("invoiceDate").innerText = `Date: ${new Date().toLocaleDateString()}`;
-    addItem();
-  }
-</script>
-
+    // Dynamic year
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 
 </body>
+
 </html>
