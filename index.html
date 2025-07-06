@@ -64,15 +64,22 @@
     const container = document.getElementById("itemsContainer");
 
     const row = document.createElement("div");
-    row.className = "grid grid-cols-4 gap-4 py-2";
+    row.className = "grid grid-cols-5 gap-4 py-2 items-center"; // Made 5 columns for remove button
     row.innerHTML = `
       <input type="text" placeholder="Item Name" class="border p-2 rounded" oninput="calculateTotal()">
       <input type="number" placeholder="Qty" class="border p-2 rounded qty" oninput="calculateTotal()">
       <input type="number" placeholder="Price" class="border p-2 rounded price" oninput="calculateTotal()">
-      <div class="total py-2">0.00</div>
+      <div class="total py-2 text-center">0.00</div>
+      <button onclick="removeItem(this)" class="text-red-500 hover:text-red-700 font-bold text-lg">×</button>
     `;
 
     container.appendChild(row);
+  }
+
+  function removeItem(button) {
+    const row = button.parentElement;
+    row.remove();
+    calculateTotal();
   }
 
   function calculateTotal() {
@@ -95,9 +102,9 @@
     const doc = new jsPDF();
 
     // Add logo if available
-   const logoData = await loadImageAsBase64("wtech.png");
+    const logoData = await loadImageAsBase64("wtech.png");
     if (logoData) {
-      doc.addImage(logoData, 'PNG', 150, 10, 40, 25); // Adjust position and size as needed
+      doc.addImage(logoData, 'PNG', 150, 10, 40, 25);
     }
 
     // Header info
@@ -107,52 +114,58 @@
     doc.setFontSize(10);
     doc.text(`Invoice #: ${document.getElementById('invoiceId').innerText}`, 10, 16);
 
-    // Add dynamic date and time
     const now = new Date();
     const dateTimeString = now.toLocaleDateString() + " " + now.toLocaleTimeString();
     doc.text(`Date & Time: ${dateTimeString}`, 10, 22);
-
     doc.text(`Shop: ${document.getElementById('shopName').value}`, 10, 28);
     doc.text(`Contact: ${document.getElementById('shopContact').value}`, 10, 34);
     doc.text(`Client: ${document.getElementById('clientName').value}`, 10, 40);
     doc.text(`Contact: ${document.getElementById('clientContact').value}`, 10, 46);
 
-    // Draw table headers with borders
-    let y = 60;
-    doc.setFontSize(12);
-    doc.setDrawColor(0);
-    doc.setFillColor(230);
-
-    // Draw header background
-    doc.rect(10, y - 8, 180, 10, 'F');
-
-    doc.setTextColor(0);
-    doc.text("Item", 12, y);
-    doc.text("Qty", 75, y);
-    doc.text("Price (MK)", 110, y);
-    doc.text("Total (MK)", 155, y);
-
-    // Draw table rows with borders
+    // Table with autoTable
+    const yStart = 60;
     const rows = document.querySelectorAll("#itemsContainer .grid");
-    y += 5;
-    rows.forEach(row => {
-      y += 10;
-      doc.rect(10, y - 8, 180, 10); // cell border width 180, height 10
+    const tableData = Array.from(rows).map(row => [
+      row.children[0].value || "-",
+      row.children[1].value || "0",
+      "MK " + (row.children[2].value || "0"),
+      "MK " + (row.children[3].innerText || "0")
+    ]);
 
-      doc.text(row.children[0].value || "-", 12, y);
-      doc.text(row.children[1].value || "0", 75, y);
-      doc.text(row.children[2].value || "0", 110, y);
-      doc.text(row.children[3].innerText || "0", 155, y);
+    doc.autoTable({
+      startY: yStart,
+      head: [["Item", "Qty", "Price (MK)", "Total (MK)"]],
+      body: tableData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [0, 0, 0],
+        textColor: 255,
+        halign: 'center',
+        fontStyle: 'bold',
+        fontSize: 11
+      },
+      bodyStyles: {
+        halign: 'center',
+        textColor: 20,
+        fontSize: 10
+      },
+      styles: {
+        lineColor: 30,
+        lineWidth: 0.4,
+        font: 'helvetica',
+        fontStyle: 'normal'
+      }
     });
 
-    y += 15;
-    doc.setFont(undefined, 'bold');
-    doc.text(`Total (MK): ${document.getElementById('grandTotal').innerText}`, 150, y);
+    // Add total below table
+    const finalY = doc.lastAutoTable.finalY + 12;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text(`Total (MK): ${document.getElementById('grandTotal').innerText}`, 200, finalY, { align: "right" });
 
     doc.save("invoice.pdf");
   }
 
-  // Helper function to load image as base64
   async function loadImageAsBase64(url) {
     try {
       const res = await fetch(url);
@@ -179,6 +192,7 @@
     addItem();
   }
 </script>
+
 
 </body>
 </html>
