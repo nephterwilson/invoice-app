@@ -41,7 +41,11 @@
         <p id="invoiceDate" class="text-sm text-gray-500"></p>
       </div>
       <div class="text-right">
-        <img src="./wtech.png" alt="Logo" class="w-20 h-20 mb-2 ml-auto" />
+        <div class="mb-2">
+        <input type="file" accept="image/*" id="logoUpload" class="mb-2" />
+        <img id="previewLogo" src="" alt="Logo Preview" class="w-20 h-20 mb-2 ml-auto hidden" />
+        </div>
+
         <input id="shopName" placeholder="Shop Name" class="font-semibold text-lg outline-none border-b border-gray-400" />
         <br />
         <input id="shopContact" placeholder="Shop Contact" class="text-sm outline-none border-b border-gray-300" />
@@ -124,25 +128,47 @@
     const doc = new jsPDF();
 
     // Add logo if available
-    const logoData = await loadImageAsBase64("wtech.png");
+   let logoData = null;
+    const logoInput = document.getElementById("logoUpload");
+    if (logoInput && logoInput.files && logoInput.files[0]) {
+    const file = logoInput.files[0];
+    logoData = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+    });
+    }
+
     if (logoData) {
       doc.addImage(logoData, 'PNG', 150, 10, 40, 25);
     }
 
     // Header info
-    doc.setFontSize(16);
-    doc.text("Invoice", 10, 10);
+   doc.setFontSize(16);
+doc.setFont('helvetica', 'bold');
+doc.text("INVOICE", 10, 15);
 
-    doc.setFontSize(10);
-    doc.text(`Invoice #: ${document.getElementById('invoiceId').innerText}`, 10, 16);
+doc.setFontSize(10);
+doc.setFont('helvetica', 'normal');
 
-    const now = new Date();
-    const dateTimeString = now.toLocaleDateString() + " " + now.toLocaleTimeString();
-    doc.text(`Date & Time: ${dateTimeString}`, 10, 22);
-    doc.text(`Shop: ${document.getElementById('shopName').value}`, 10, 28);
-    doc.text(`Contact: ${document.getElementById('shopContact').value}`, 10, 34);
-    doc.text(`Client: ${document.getElementById('clientName').value}`, 10, 40);
-    doc.text(`Contact: ${document.getElementById('clientContact').value}`, 10, 46);
+const info = [
+  ["Invoice #:", document.getElementById('invoiceId').innerText],
+  ["Date & Time:", new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString()],
+  ["Shop:", document.getElementById('shopName').value],
+  ["Contact:", document.getElementById('shopContact').value],
+  ["Client:", document.getElementById('clientName').value],
+  ["Contact:", document.getElementById('clientContact').value]
+];
+
+let y = 22;
+info.forEach(([label, value]) => {
+  doc.setFont('helvetica', 'bold');
+  doc.text(label, 12, y);
+  doc.setFont('helvetica', 'normal');
+  doc.text(value, 35, y);
+  y += 6;
+});
+
 
     // Table with autoTable
     const yStart = 60;
@@ -239,6 +265,23 @@
     document.getElementById("invoiceDate").innerText = `Date: ${new Date().toLocaleDateString()}`;
     addItem();
   }
+
+//  Previe the logo
+
+        const logoInput = document.getElementById('logoUpload');
+        const previewLogo = document.getElementById('previewLogo');
+
+        logoInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                previewLogo.src = e.target.result;
+                previewLogo.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+            }
+        });
 </script>
 
 
